@@ -34,7 +34,6 @@ font = pygame.font.Font(None, 36)
 # Arrays para armazenar as posições e letras
 left_points = []
 right_points = []
-all_points = []
 alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 # Definindo a quantidade de pontos a serem gerados em cada lado do retângulo
@@ -56,40 +55,64 @@ def calculate_distance(point1, point2):
     x2, y2 = point2['position']
     return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
-# Função para encontrar o par de pontos mais próximo
-def find_closest_pairs(points):
-    closest_pairs = []
-    available_points = points.copy()
-    
-    while available_points:
-        point = available_points.pop(0)
-        closest = None
-        min_distance = float('inf')
+# Função de dividir e conquistar para encontrar o par de pontos mais próximo
+def closest_pair_divide_and_conquer(points):
+    def closest_pair_rec(sorted_x, sorted_y):
+        if len(sorted_x) <= 3:
+            return brute_force_closest_pair(sorted_x)
         
-        for other_point in available_points:
-            distance = calculate_distance(point, other_point)
-            if distance < min_distance:
-                min_distance = distance
-                closest = other_point
+        mid = len(sorted_x) // 2
+        midpoint = sorted_x[mid]['position'][0]
         
-        if closest:
-            available_points.remove(closest)
-            closest_pairs.append((point, closest))
+        left_x = sorted_x[:mid]
+        right_x = sorted_x[mid:]
+        
+        midpoint_x = sorted_x[mid]['position'][0]
+        
+        left_y = list(filter(lambda p: p['position'][0] <= midpoint_x, sorted_y))
+        right_y = list(filter(lambda p: p['position'][0] > midpoint_x, sorted_y))
+        
+        (p1_left, p2_left, dist_left) = closest_pair_rec(left_x, left_y)
+        (p1_right, p2_right, dist_right) = closest_pair_rec(right_x, right_y)
+        
+        min_pair = (p1_left, p2_left) if dist_left < dist_right else (p1_right, p2_right)
+        min_dist = min(dist_left, dist_right)
+        
+        in_strip = [p for p in sorted_y if abs(p['position'][0] - midpoint) < min_dist]
+        
+        for i in range(len(in_strip)):
+            for j in range(i + 1, min(i + 7, len(in_strip))):
+                p1, p2 = in_strip[i], in_strip[j]
+                dist = calculate_distance(p1, p2)
+                if dist < min_dist:
+                    min_dist = dist
+                    min_pair = (p1, p2)
+        
+        return min_pair[0], min_pair[1], min_dist
     
-    return closest_pairs
+    sorted_x = sorted(points, key=lambda p: p['position'][0])
+    sorted_y = sorted(points, key=lambda p: p['position'][1])
+    
+    return closest_pair_rec(sorted_x, sorted_y)
+
+# Função de força bruta para encontrar o par de pontos mais próximo
+def brute_force_closest_pair(points):
+    min_dist = float('inf')
+    p1 = None
+    p2 = None
+    for i in range(len(points)):
+        for j in range(i + 1, len(points)):
+            dist = calculate_distance(points[i], points[j])
+            if dist < min_dist:
+                min_dist = dist
+                p1, p2 = points[i], points[j]
+    return p1, p2, min_dist
 
 # Gerando pontos para o lado esquerdo do retângulo
 left_points = generate_random_points(num_points, rect_x, SCREEN_WIDTH // 2, rect_y, rect_y + RECT_HEIGHT)
 
 # Gerando pontos para o lado direito do retângulo
 right_points = generate_random_points(num_points, SCREEN_WIDTH // 2, rect_x + RECT_WIDTH, rect_y, rect_y + RECT_HEIGHT)
-
-# Unindo todos os pontos e embaralhando a ordem
-all_points = left_points + right_points
-random.shuffle(all_points)
-
-# Encontrando pares mais próximos
-closest_pairs = find_closest_pairs(all_points)
 
 # Campos de entrada de texto
 input_box_left = pygame.Rect(100, SCREEN_HEIGHT - 50, 140, 32)
@@ -103,17 +126,17 @@ text_right = ''
 active_left = False
 active_right = False
 
-# Função para desenhar as coordenadas
-def draw_coordinates(letter, side):
-    points = left_points if side == 'left' else right_points
+# Função para desenhar as coordenadas dos pares de pontos encontrados
+def draw_pair(pair):
+    if pair:
+        for point in pair:
+            color = RED if point in left_points else BLUE
+            pygame.draw.circle(screen, color, point['position'], 5)
+            letter_surface = font.render(point['letter'], True, BLACK)
+            screen.blit(letter_surface, (point['position'][0] + 10, point['position'][1] - 10))
 
-    for point in points:
-        if point['letter'] == letter.upper():
-            coords = f"({point['position'][0]}, {point['position'][1]})"
-            if side == 'left':
-                screen.blit(font.render(coords, True, BLACK), (100, SCREEN_HEIGHT - 100))
-            elif side == 'right':
-                screen.blit(font.render(coords, True, BLACK), (SCREEN_WIDTH - 240, SCREEN_HEIGHT - 100))
+        # Desenha a linha entre os pontos mais próximos
+        pygame.draw.line(screen, BLACK, pair[0]['position'], pair[1]['position'], 2)
 
 # Loop principal
 def main():
@@ -128,12 +151,14 @@ def main():
         # Desenha a linha vertical dentro do retângulo
         pygame.draw.line(screen, BLACK, (SCREEN_WIDTH // 2, rect_y), (SCREEN_WIDTH // 2, rect_y + RECT_HEIGHT), 2)
 
-        # Desenha os pontos e letras para os pares mais próximos
-        for pair in closest_pairs:
-            for point in pair:
-                pygame.draw.circle(screen, RED if point in left_points else BLUE, point['position'], 5)
-                letter_surface = font.render(point['letter'], True, BLACK)
-                screen.blit(letter_surface, (point['position'][0] + 10, point['position'][1] - 10))
+        # Desenha os pontos gerados aleatoriamente
+        for point in left_points:
+            pygame.draw.circle(screen, RED, point['position'], 5)
+            screen.blit(font.render(point['letter'], True, BLACK), (point['position'][0] + 10, point['position'][1] - 10))
+        
+        for point in right_points:
+            pygame.draw.circle(screen, BLUE, point['position'], 5)
+            screen.blit(font.render(point['letter'], True, BLACK), (point['position'][0] + 10, point['position'][1] - 10))
 
         # Desenha os campos de entrada
         pygame.draw.rect(screen, input_color_left, input_box_left, 2)
@@ -141,11 +166,24 @@ def main():
         screen.blit(font.render(text_left, True, BLACK), (input_box_left.x + 5, input_box_left.y + 5))
         screen.blit(font.render(text_right, True, BLACK), (input_box_right.x + 5, input_box_right.y + 5))
 
-        # Desenha as coordenadas dos pontos associados às letras digitadas
-        if text_left:
-            draw_coordinates(text_left, 'left')
-        if text_right:
-            draw_coordinates(text_right, 'right')
+        # Desenha o par de pontos mais próximos, baseado na distância digitada
+        try:
+            if active_left:
+                _, _, min_distance = closest_pair_divide_and_conquer(left_points)
+                closest_pair_right, found_distance_right = closest_pair_divide_and_conquer(right_points)
+                if found_distance_right >= min_distance:
+                    draw_pair(closest_pair_right)
+                    screen.blit(font.render(f"Distância (Dir): {found_distance_right:.2f}", True, BLACK), 
+                                (3 * SCREEN_WIDTH // 4 - 50, SCREEN_HEIGHT - 100))
+            elif active_right:
+                _, _, min_distance = closest_pair_divide_and_conquer(right_points)
+                closest_pair_left, found_distance_left = closest_pair_divide_and_conquer(left_points)
+                if found_distance_left >= min_distance:
+                    draw_pair(closest_pair_left)
+                    screen.blit(font.render(f"Distância (Esq): {found_distance_left:.2f}", True, BLACK), 
+                                (SCREEN_WIDTH // 4 - 50, SCREEN_HEIGHT - 100))
+        except ValueError:
+            pass
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
