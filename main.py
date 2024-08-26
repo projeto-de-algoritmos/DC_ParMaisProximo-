@@ -125,22 +125,49 @@ text_left = ''
 text_right = ''
 active_left = False
 active_right = False
+message = ""
 
-# Função para desenhar as coordenadas dos pares de pontos encontrados
-def draw_pair(pair):
-    if pair:
-        for point in pair:
-            color = RED if point in left_points else BLUE
-            pygame.draw.circle(screen, color, point['position'], 5)
-            letter_surface = font.render(point['letter'], True, BLACK)
-            screen.blit(letter_surface, (point['position'][0] + 10, point['position'][1] - 10))
+# Controle de bloqueio
+left_locked = False
+right_locked = False
 
-        # Desenha a linha entre os pontos mais próximos
-        pygame.draw.line(screen, BLACK, pair[0]['position'], pair[1]['position'], 2)
+# Função para atualizar a mensagem de resultado ao digitar
+def update_message():
+    global text_left, text_right, left_points, right_points, message, left_locked, right_locked
+
+    if text_left.isdigit():
+        input_distance = float(text_left)
+        
+        closest_pair_right = closest_pair_divide_and_conquer(right_points)
+        _, _, min_distance_right = closest_pair_right
+        
+        if input_distance >= 0.9 * min_distance_right:
+            message = f"Acertou! Distância: {min_distance_right:.2f}"
+            right_points.remove(closest_pair_right[0])
+        else:
+            message = f"Errou! A menor distância é {min_distance_right:.2f}"
+        
+        left_locked = True
+        right_locked = False
+
+    if text_right.isdigit():
+        input_distance = float(text_right)
+        
+        closest_pair_left = closest_pair_divide_and_conquer(left_points)
+        _, _, min_distance_left = closest_pair_left
+        
+        if input_distance >= 0.9 * min_distance_left:
+            message = f"Acertou! Distância: {min_distance_left:.2f}"
+            left_points.remove(closest_pair_left[0])
+        else:
+            message = f"Errou! A menor distância é {min_distance_left:.2f}"
+        
+        right_locked = True
+        left_locked = False
 
 # Loop principal
 def main():
-    global text_left, text_right, active_left, active_right, input_color_left, input_color_right
+    global text_left, text_right, active_left, active_right, input_color_left, input_color_right, left_points, right_points, message, left_locked, right_locked
 
     while True:
         screen.fill(WHITE)
@@ -166,24 +193,10 @@ def main():
         screen.blit(font.render(text_left, True, BLACK), (input_box_left.x + 5, input_box_left.y + 5))
         screen.blit(font.render(text_right, True, BLACK), (input_box_right.x + 5, input_box_right.y + 5))
 
-        # Desenha o par de pontos mais próximos, baseado na distância digitada
-        try:
-            if active_left:
-                _, _, min_distance = closest_pair_divide_and_conquer(left_points)
-                closest_pair_right, found_distance_right = closest_pair_divide_and_conquer(right_points)
-                if found_distance_right >= min_distance:
-                    draw_pair(closest_pair_right)
-                    screen.blit(font.render(f"Distância (Dir): {found_distance_right:.2f}", True, BLACK), 
-                                (3 * SCREEN_WIDTH // 4 - 50, SCREEN_HEIGHT - 100))
-            elif active_right:
-                _, _, min_distance = closest_pair_divide_and_conquer(right_points)
-                closest_pair_left, found_distance_left = closest_pair_divide_and_conquer(left_points)
-                if found_distance_left >= min_distance:
-                    draw_pair(closest_pair_left)
-                    screen.blit(font.render(f"Distância (Esq): {found_distance_left:.2f}", True, BLACK), 
-                                (SCREEN_WIDTH // 4 - 50, SCREEN_HEIGHT - 100))
-        except ValueError:
-            pass
+        # Desenha a mensagem de resultado
+        if message:
+            result_text = font.render(message, True, BLACK)
+            screen.blit(result_text, (SCREEN_WIDTH - 240, SCREEN_HEIGHT - 100))
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -194,10 +207,10 @@ def main():
                 mouse_pos = pygame.mouse.get_pos()
 
                 # Verifica se clicou nos campos de entrada
-                if input_box_left.collidepoint(event.pos):
+                if input_box_left.collidepoint(event.pos) and not left_locked:
                     active_left = True
                     active_right = False
-                elif input_box_right.collidepoint(event.pos):
+                elif input_box_right.collidepoint(event.pos) and not right_locked:
                     active_right = True
                     active_left = False
                 else:
@@ -208,16 +221,19 @@ def main():
                 input_color_right = input_color_active if active_right else input_color_inactive
 
             if event.type == pygame.KEYDOWN:
-                if active_left:
+                if active_left and not left_locked:
                     if event.key == pygame.K_BACKSPACE:
                         text_left = text_left[:-1]
                     else:
                         text_left += event.unicode
-                elif active_right:
+                    update_message()
+
+                elif active_right and not right_locked:
                     if event.key == pygame.K_BACKSPACE:
                         text_right = text_right[:-1]
                     else:
                         text_right += event.unicode
+                    update_message()
 
         pygame.display.flip()
 
