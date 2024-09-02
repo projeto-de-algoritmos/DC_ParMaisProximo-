@@ -147,7 +147,7 @@ def update_message():
         else:
             message = f"Errou! A menor distância é {min_distance_right:.2f}"
         
-        left_locked = True
+        left_locked = False
         right_locked = False
 
     if text_right.isdigit():
@@ -162,7 +162,7 @@ def update_message():
         else:
             message = f"Errou! A menor distância é {min_distance_left:.2f}"
         
-        right_locked = True
+        right_locked = False
         left_locked = False
 
 # Loop principal
@@ -196,7 +196,7 @@ def main():
         # Desenha a mensagem de resultado
         if message:
             result_text = font.render(message, True, BLACK)
-            screen.blit(result_text, (SCREEN_WIDTH - 240, SCREEN_HEIGHT - 100))
+            screen.blit(result_text, (SCREEN_WIDTH - 600, SCREEN_HEIGHT - 550))
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
