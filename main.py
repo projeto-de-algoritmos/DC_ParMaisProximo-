@@ -3,59 +3,47 @@ import sys
 import random
 import math
 
-# Inicializando o Pygame
 pygame.init()
 
-# Definindo as cores
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 BLUE = (0, 0, 255)
 
-# Dimensões da tela
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 
-# Dimensões do retângulo central
 RECT_WIDTH = 700
 RECT_HEIGHT = 400
 
-# Posição do retângulo central
 rect_x = (SCREEN_WIDTH - RECT_WIDTH) // 2
 rect_y = (SCREEN_HEIGHT - RECT_HEIGHT) // 2
 
-# Inicializando a tela
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Batalha Naval Simplificada")
+pygame.display.set_caption("Batalha Pontual")
 
-# Fonte para desenhar as letras e coordenadas
 font = pygame.font.Font(None, 36)
 
-# Arrays para armazenar as posições e letras
 left_points = []
 right_points = []
 alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
-# Definindo a quantidade de pontos a serem gerados em cada lado do retângulo
-num_points = 10  # Você pode alterar este valor conforme necessário
+num_points = 10 
 
-# Função para gerar pontos aleatórios dentro de um retângulo
 def generate_random_points(num_points, x_start, x_end, y_start, y_end):
     points = []
     for i in range(num_points):
         x = random.randint(x_start, x_end)
         y = random.randint(y_start, y_end)
-        letter = alphabet[i % len(alphabet)]  # Gira o alfabeto se necessário
+        letter = alphabet[i % len(alphabet)] 
         points.append({'position': (x, y), 'letter': letter})
     return points
 
-# Função para calcular a distância entre dois pontos
 def calculate_distance(point1, point2):
     x1, y1 = point1['position']
     x2, y2 = point2['position']
     return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
-# Função de dividir e conquistar para encontrar o par de pontos mais próximo
 def closest_pair_divide_and_conquer(points):
     def closest_pair_rec(sorted_x, sorted_y):
         if len(sorted_x) <= 3:
@@ -95,7 +83,6 @@ def closest_pair_divide_and_conquer(points):
     
     return closest_pair_rec(sorted_x, sorted_y)
 
-# Função de força bruta para encontrar o par de pontos mais próximo
 def brute_force_closest_pair(points):
     min_dist = float('inf')
     p1 = None
@@ -108,13 +95,10 @@ def brute_force_closest_pair(points):
                 p1, p2 = points[i], points[j]
     return p1, p2, min_dist
 
-# Gerando pontos para o lado esquerdo do retângulo
 left_points = generate_random_points(num_points, rect_x, SCREEN_WIDTH // 2, rect_y, rect_y + RECT_HEIGHT)
 
-# Gerando pontos para o lado direito do retângulo
 right_points = generate_random_points(num_points, SCREEN_WIDTH // 2, rect_x + RECT_WIDTH, rect_y, rect_y + RECT_HEIGHT)
 
-# Campos de entrada de texto
 input_box_left = pygame.Rect(100, SCREEN_HEIGHT - 50, 140, 32)
 input_box_right = pygame.Rect(SCREEN_WIDTH - 240, SCREEN_HEIGHT - 50, 140, 32)
 input_color_active = pygame.Color('dodgerblue2')
@@ -127,11 +111,13 @@ active_left = False
 active_right = False
 message = ""
 
-# Controle de bloqueio
 left_locked = False
 right_locked = False
 
-# Função para atualizar a mensagem de resultado ao digitar
+button_box_left = pygame.Rect(input_box_left.x + input_box_left.width + 10, input_box_left.y, 90, 32)
+button_box_right = pygame.Rect(input_box_right.x + input_box_right.width + 10, input_box_right.y, 90, 32)
+
+
 def update_message():
     global text_left, text_right, left_points, right_points, message, left_locked, right_locked
 
@@ -165,58 +151,78 @@ def update_message():
         right_locked = False
         left_locked = False
 
-# Loop principal
+turn = 'left' 
+
 def main():
-    global text_left, text_right, active_left, active_right, input_color_left, input_color_right, left_points, right_points, message, left_locked, right_locked
+    global text_left, text_right, active_left, active_right, input_color_left, input_color_right, left_points, right_points, message, left_locked, right_locked, turn
 
     while True:
         screen.fill(WHITE)
 
-        # Desenha o retângulo central
+    
         pygame.draw.rect(screen, BLACK, (rect_x, rect_y, RECT_WIDTH, RECT_HEIGHT), 2)
 
-        # Desenha a linha vertical dentro do retângulo
+    
         pygame.draw.line(screen, BLACK, (SCREEN_WIDTH // 2, rect_y), (SCREEN_WIDTH // 2, rect_y + RECT_HEIGHT), 2)
 
-        # Desenha os pontos gerados aleatoriamente
+    
         for point in left_points:
             pygame.draw.circle(screen, RED, point['position'], 5)
             screen.blit(font.render(point['letter'], True, BLACK), (point['position'][0] + 10, point['position'][1] - 10))
-        
+
         for point in right_points:
             pygame.draw.circle(screen, BLUE, point['position'], 5)
             screen.blit(font.render(point['letter'], True, BLACK), (point['position'][0] + 10, point['position'][1] - 10))
 
-        # Desenha os campos de entrada
+    
         pygame.draw.rect(screen, input_color_left, input_box_left, 2)
         pygame.draw.rect(screen, input_color_right, input_box_right, 2)
         screen.blit(font.render(text_left, True, BLACK), (input_box_left.x + 5, input_box_left.y + 5))
         screen.blit(font.render(text_right, True, BLACK), (input_box_right.x + 5, input_box_right.y + 5))
 
-        # Desenha a mensagem de resultado
+    
+        pygame.draw.rect(screen, input_color_active if turn == 'left' else input_color_inactive, button_box_left)
+        pygame.draw.rect(screen, input_color_active if turn == 'right' else input_color_inactive, button_box_right)
+
+    
+        button_text_left = font.render('atacar', True, WHITE)
+        button_text_right = font.render('atacar', True, WHITE)
+        screen.blit(button_text_left, (button_box_left.x + 10, button_box_left.y + 5))
+        screen.blit(button_text_right, (button_box_right.x + 10, button_box_right.y + 5))
+
+    
         if message:
             result_text = font.render(message, True, BLACK)
             screen.blit(result_text, (SCREEN_WIDTH - 600, SCREEN_HEIGHT - 550))
 
+    
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
 
             if event.type == pygame.MOUSEBUTTONDOWN:
-                mouse_pos = pygame.mouse.get_pos()
-
-                # Verifica se clicou nos campos de entrada
-                if input_box_left.collidepoint(event.pos) and not left_locked:
+                if input_box_left.collidepoint(event.pos) and not left_locked and turn == 'left':
                     active_left = True
                     active_right = False
-                elif input_box_right.collidepoint(event.pos) and not right_locked:
+                elif input_box_right.collidepoint(event.pos) and not right_locked and turn == 'right':
                     active_right = True
                     active_left = False
                 else:
                     active_left = False
                     active_right = False
 
+                if button_box_left.collidepoint(event.pos) and not left_locked and turn == 'left':
+                    left_locked = True
+                    update_message() 
+                    text_left = "" 
+                    turn = 'right'  
+
+                elif button_box_right.collidepoint(event.pos) and not right_locked and turn == 'right':
+                    right_locked = True
+                    update_message()  
+                    text_right = ""  
+                    turn = 'left'  
                 input_color_left = input_color_active if active_left else input_color_inactive
                 input_color_right = input_color_active if active_right else input_color_inactive
 
@@ -226,14 +232,12 @@ def main():
                         text_left = text_left[:-1]
                     else:
                         text_left += event.unicode
-                    update_message()
 
                 elif active_right and not right_locked:
                     if event.key == pygame.K_BACKSPACE:
                         text_right = text_right[:-1]
                     else:
                         text_right += event.unicode
-                    update_message()
 
         pygame.display.flip()
 
