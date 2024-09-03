@@ -127,7 +127,7 @@ def update_message():
         closest_pair_right = closest_pair_divide_and_conquer(right_points)
         _, _, min_distance_right = closest_pair_right
         
-        if input_distance >= 0.9 * min_distance_right:
+        if 0.90 * min_distance_right <= input_distance <= 1.05 * min_distance_right:
             message = f"Acertou! Distância: {min_distance_right:.2f}"
             right_eliminated_letters.append(closest_pair_right[0]['letter'])
             right_points.remove(closest_pair_right[0])
@@ -143,7 +143,7 @@ def update_message():
         closest_pair_left = closest_pair_divide_and_conquer(left_points)
         _, _, min_distance_left = closest_pair_left
         
-        if input_distance >= 0.9 * min_distance_left:
+        if 0.90 * min_distance_left <= input_distance <= 1.05 * min_distance_left:
             message = f"Acertou! Distância: {min_distance_left:.2f}"
             left_eliminated_letters.append(closest_pair_left[0]['letter'])
             left_points.remove(closest_pair_left[0])
@@ -198,12 +198,12 @@ def main():
             screen.blit(result_text, (SCREEN_WIDTH - 600, SCREEN_HEIGHT - 550))
 
 
-        eliminated_text_left = font.render('Eliminadas: ' + ', '.join(left_eliminated_letters), True, BLACK)
+        eliminated_text_left = font.render('Pontos Eliminados: ' + ', '.join(left_eliminated_letters), True, RED)
         screen.blit(eliminated_text_left, (10, 10))
 
 
-        eliminated_text_right = font.render('Eliminadas: ' + ', '.join(right_eliminated_letters), True, BLACK)
-        screen.blit(eliminated_text_right, (SCREEN_WIDTH - 250, 10))
+        eliminated_text_right = font.render('Pontos Eliminados: ' + ', '.join(right_eliminated_letters), True, BLUE)
+        screen.blit(eliminated_text_right, (SCREEN_WIDTH - 320, 10))
 
         pygame.display.flip()
 
