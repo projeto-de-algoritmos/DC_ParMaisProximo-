@@ -96,7 +96,6 @@ def brute_force_closest_pair(points):
     return p1, p2, min_dist
 
 left_points = generate_random_points(num_points, rect_x, SCREEN_WIDTH // 2, rect_y, rect_y + RECT_HEIGHT)
-
 right_points = generate_random_points(num_points, SCREEN_WIDTH // 2, rect_x + RECT_WIDTH, rect_y, rect_y + RECT_HEIGHT)
 
 input_box_left = pygame.Rect(100, SCREEN_HEIGHT - 50, 140, 32)
@@ -116,7 +115,8 @@ right_locked = False
 
 button_box_left = pygame.Rect(input_box_left.x + input_box_left.width + 10, input_box_left.y, 90, 32)
 button_box_right = pygame.Rect(input_box_right.x + input_box_right.width + 10, input_box_right.y, 90, 32)
-
+left_eliminated_letters = []
+right_eliminated_letters = []
 
 def update_message():
     global text_left, text_right, left_points, right_points, message, left_locked, right_locked
@@ -129,6 +129,7 @@ def update_message():
         
         if input_distance >= 0.9 * min_distance_right:
             message = f"Acertou! Distância: {min_distance_right:.2f}"
+            right_eliminated_letters.append(closest_pair_right[0]['letter'])
             right_points.remove(closest_pair_right[0])
         else:
             message = f"Errou! A menor distância é {min_distance_right:.2f}"
@@ -144,9 +145,10 @@ def update_message():
         
         if input_distance >= 0.9 * min_distance_left:
             message = f"Acertou! Distância: {min_distance_left:.2f}"
+            left_eliminated_letters.append(closest_pair_left[0]['letter'])
             left_points.remove(closest_pair_left[0])
         else:
-            message = f"Errou! A menor distância é {min_distance_left:.2f}"
+            message = f"Errou!"
         
         right_locked = False
         left_locked = False
@@ -159,87 +161,103 @@ def main():
     while True:
         screen.fill(WHITE)
 
-    
+
         pygame.draw.rect(screen, BLACK, (rect_x, rect_y, RECT_WIDTH, RECT_HEIGHT), 2)
 
-    
+
         pygame.draw.line(screen, BLACK, (SCREEN_WIDTH // 2, rect_y), (SCREEN_WIDTH // 2, rect_y + RECT_HEIGHT), 2)
 
-    
+
         for point in left_points:
             pygame.draw.circle(screen, RED, point['position'], 5)
             screen.blit(font.render(point['letter'], True, BLACK), (point['position'][0] + 10, point['position'][1] - 10))
+
 
         for point in right_points:
             pygame.draw.circle(screen, BLUE, point['position'], 5)
             screen.blit(font.render(point['letter'], True, BLACK), (point['position'][0] + 10, point['position'][1] - 10))
 
-    
+
         pygame.draw.rect(screen, input_color_left, input_box_left, 2)
         pygame.draw.rect(screen, input_color_right, input_box_right, 2)
         screen.blit(font.render(text_left, True, BLACK), (input_box_left.x + 5, input_box_left.y + 5))
         screen.blit(font.render(text_right, True, BLACK), (input_box_right.x + 5, input_box_right.y + 5))
 
-    
+
         pygame.draw.rect(screen, input_color_active if turn == 'left' else input_color_inactive, button_box_left)
         pygame.draw.rect(screen, input_color_active if turn == 'right' else input_color_inactive, button_box_right)
 
-    
         button_text_left = font.render('atacar', True, WHITE)
         button_text_right = font.render('atacar', True, WHITE)
         screen.blit(button_text_left, (button_box_left.x + 10, button_box_left.y + 5))
         screen.blit(button_text_right, (button_box_right.x + 10, button_box_right.y + 5))
 
-    
+
         if message:
             result_text = font.render(message, True, BLACK)
             screen.blit(result_text, (SCREEN_WIDTH - 600, SCREEN_HEIGHT - 550))
 
-    
+
+        eliminated_text_left = font.render('Eliminadas: ' + ', '.join(left_eliminated_letters), True, BLACK)
+        screen.blit(eliminated_text_left, (10, 10))
+
+
+        eliminated_text_right = font.render('Eliminadas: ' + ', '.join(right_eliminated_letters), True, BLACK)
+        screen.blit(eliminated_text_right, (SCREEN_WIDTH - 250, 10))
+
+        pygame.display.flip()
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
 
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if input_box_left.collidepoint(event.pos) and not left_locked and turn == 'left':
+                if button_box_left.collidepoint(event.pos) and turn == 'left' and not left_locked:
+                    left_locked = True
+                    right_locked = False
+                    update_message()
+                    text_left = ''
+                    turn = 'right'
+
+                if button_box_right.collidepoint(event.pos) and turn == 'right' and not right_locked:
+                    right_locked = True
+                    left_locked = False
+                    update_message()
+                    text_right = ''
+                    turn = 'left'
+
+                if input_box_left.collidepoint(event.pos):
                     active_left = True
                     active_right = False
-                elif input_box_right.collidepoint(event.pos) and not right_locked and turn == 'right':
+                elif input_box_right.collidepoint(event.pos):
                     active_right = True
                     active_left = False
                 else:
                     active_left = False
                     active_right = False
 
-                if button_box_left.collidepoint(event.pos) and not left_locked and turn == 'left':
-                    left_locked = True
-                    update_message() 
-                    text_left = "" 
-                    turn = 'right'  
-
-                elif button_box_right.collidepoint(event.pos) and not right_locked and turn == 'right':
-                    right_locked = True
-                    update_message()  
-                    text_right = ""  
-                    turn = 'left'  
                 input_color_left = input_color_active if active_left else input_color_inactive
                 input_color_right = input_color_active if active_right else input_color_inactive
 
             if event.type == pygame.KEYDOWN:
-                if active_left and not left_locked:
-                    if event.key == pygame.K_BACKSPACE:
+                if active_left:
+                    if event.key == pygame.K_RETURN:
+                        update_message()
+                        text_left = ''
+                    elif event.key == pygame.K_BACKSPACE:
                         text_left = text_left[:-1]
                     else:
                         text_left += event.unicode
 
-                elif active_right and not right_locked:
-                    if event.key == pygame.K_BACKSPACE:
+                if active_right:
+                    if event.key == pygame.K_RETURN:
+                        update_message()
+                        text_right = ''
+                    elif event.key == pygame.K_BACKSPACE:
                         text_right = text_right[:-1]
                     else:
                         text_right += event.unicode
-
-        pygame.display.flip()
 
 if __name__ == "__main__":
     main()
