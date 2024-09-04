@@ -20,7 +20,7 @@ rect_x = (SCREEN_WIDTH - RECT_WIDTH) // 2
 rect_y = (SCREEN_HEIGHT - RECT_HEIGHT) // 2
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-#screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.FULLSCREEN)
+# screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.FULLSCREEN)
 
 pygame.display.set_caption("Batalha Pontual")
 
@@ -30,14 +30,14 @@ left_points = []
 right_points = []
 alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
-num_points = 10 
+num_points = 10
 
 def generate_random_points(num_points, x_start, x_end, y_start, y_end):
     points = []
     for i in range(num_points):
         x = random.randint(x_start, x_end)
         y = random.randint(y_start, y_end)
-        letter = alphabet[i % len(alphabet)] 
+        letter = alphabet[i % len(alphabet)]
         points.append({'position': (x, y), 'letter': letter})
     return points
 
@@ -104,9 +104,11 @@ input_box_left = pygame.Rect(150, SCREEN_HEIGHT - 50, 140, 32)
 input_box_right = pygame.Rect(SCREEN_WIDTH - 390, SCREEN_HEIGHT - 50, 140, 32)
 input_color_active = pygame.Color('dodgerblue2')
 input_color_inactive = pygame.Color('lightskyblue3')
+input_color_right_active = RED  # Campo de entrada à direita agora é vermelho
+input_color_right_inactive = (255, 182, 193)
 
 input_color_left = input_color_inactive
-input_color_right = input_color_inactive
+input_color_right = input_color_right_inactive
 text_left = ''
 text_right = ''
 active_left = False
@@ -128,7 +130,7 @@ distance_text = ""
 
 def update_message():
     global text_left, text_right, left_points, right_points, message, left_locked, right_locked, turn
-    global line_start, line_end, distance_text
+    global line_start, line_end, distance_text 
 
     if text_left.isdigit():
         input_distance = float(text_left)
@@ -136,7 +138,7 @@ def update_message():
         closest_pair_right = closest_pair_divide_and_conquer(right_points)
         _, _, min_distance_right = closest_pair_right
         
-        if 0.90 * min_distance_right <= input_distance <= 1.05 * min_distance_right:
+        if 0.90 * min_distance_right <= input_distance <= 1.1 * min_distance_right:
             message = f"Acertou! Distância: {min_distance_right:.2f}"
             right_eliminated_letters.append(closest_pair_right[0]['letter'])
             right_points.remove(closest_pair_right[0])
@@ -145,9 +147,10 @@ def update_message():
             line_end = None
             distance_text = ""
         else:
-            message = f"Errou! A menor distância é {min_distance_right:.2f}"
+            message = f"Errou! Tente acetar a menor Distância"
+            #message = f"Errou! A menor distância é {min_distance_right:.2f}"
             line_start, line_end = closest_pair_divide_and_conquer(right_points)[:2]
-            distance_text = f"{min_distance_right:.2f}"
+            distance_text = ""  # Não exibe a distância ao errar
         
         left_locked = False
         right_locked = False
@@ -159,7 +162,7 @@ def update_message():
         closest_pair_left = closest_pair_divide_and_conquer(left_points)
         _, _, min_distance_left = closest_pair_left
         
-        if 0.90 * min_distance_left <= input_distance <= 1.05 * min_distance_left:
+        if 0.90 * min_distance_left <= input_distance <= 1.1 * min_distance_left:
             message = f"Acertou! Distância: {min_distance_left:.2f}"
             left_eliminated_letters.append(closest_pair_left[0]['letter'])
             left_points.remove(closest_pair_left[0])
@@ -168,9 +171,9 @@ def update_message():
             line_end = None
             distance_text = ""
         else:
-            message = f"Errou!"
+            message = f"Errou! Tente acetar a menor Distância"
             line_start, line_end = closest_pair_divide_and_conquer(left_points)[:2]
-            distance_text = f"{min_distance_left:.2f}"
+            distance_text = ""  # Não exibe a distância ao errar
         
         right_locked = False
         left_locked = False
@@ -202,7 +205,7 @@ def main():
         screen.blit(font.render(text_right, True, BLACK), (input_box_right.x + 5, input_box_right.y + 5))
 
         pygame.draw.rect(screen, input_color_active if turn == 'left' else input_color_inactive, button_box_left)
-        pygame.draw.rect(screen, input_color_active if turn == 'right' else input_color_inactive, button_box_right)
+        pygame.draw.rect(screen, input_color_right_active if turn == 'right' else input_color_right_inactive, button_box_right)
 
         button_text_left = font.render('atacar', True, WHITE)
         button_text_right = font.render('atacar', True, WHITE)
@@ -216,7 +219,8 @@ def main():
         if line_start and line_end:
             pygame.draw.line(screen, BLACK, line_start['position'], line_end['position'], 2)
             mid_point = ((line_start['position'][0] + line_end['position'][0]) // 2, (line_start['position'][1] + line_end['position'][1]) // 2)
-            screen.blit(font.render(distance_text, True, BLACK), (mid_point[0], mid_point[1] - 20))
+            if distance_text:
+                screen.blit(font.render(distance_text, True, BLACK), (mid_point[0], mid_point[1] - 20))
 
         eliminated_text_left = font.render('Pontos Eliminados: ' + ', '.join(left_eliminated_letters), True, RED)
         screen.blit(eliminated_text_left, (20, 10))
@@ -254,7 +258,7 @@ def main():
                     active_right = False
 
                 input_color_left = input_color_active if active_left else input_color_inactive
-                input_color_right = input_color_active if active_right else input_color_inactive
+                input_color_right = input_color_right_active if active_right else input_color_right_inactive
 
             if event.type == pygame.KEYDOWN:
                 if active_left:
