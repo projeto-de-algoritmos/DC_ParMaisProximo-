@@ -147,8 +147,8 @@ def update_message():
             line_end = None
             distance_text = ""
         else:
-            message = f"Errou! Tente acetar a menor Distância"
-            #message = f"Errou! A menor distância é {min_distance_right:.2f}"
+            #message = f"Errou! Tente acetar a menor Distância"
+            message = f"Errou! A menor distância é {min_distance_right:.2f}"
             line_start, line_end = closest_pair_divide_and_conquer(right_points)[:2]
             distance_text = ""  # Não exibe a distância ao errar
         
@@ -171,7 +171,8 @@ def update_message():
             line_end = None
             distance_text = ""
         else:
-            message = f"Errou! Tente acetar a menor Distância"
+            message = f"Errou! Tente acetar a menor Distância {min_distance_left:.2f}"
+            #message = f"Errou! Tente acetar a menor Distância "
             line_start, line_end = closest_pair_divide_and_conquer(left_points)[:2]
             distance_text = ""  # Não exibe a distância ao errar
         
@@ -190,6 +191,37 @@ def main():
 
         pygame.draw.rect(screen, BLACK, (rect_x, rect_y, RECT_WIDTH, RECT_HEIGHT), 2)
         pygame.draw.line(screen, BLACK, (SCREEN_WIDTH // 2, rect_y), (SCREEN_WIDTH // 2, rect_y + RECT_HEIGHT), 2)
+
+         # Desenha as escalas de Y (vertical) na lateral esquerda
+        for i in [rect_y + RECT_HEIGHT, rect_y + RECT_HEIGHT // 2, rect_y]:
+            pygame.draw.line(screen, BLACK, (rect_x, i), (rect_x - 10, i), 2)  # Linha vertical na lateral esquerda
+            
+            if i == rect_y + RECT_HEIGHT:  # Valor na parte inferior
+                label = font.render(f'0', True, BLACK)
+            elif i == rect_y + RECT_HEIGHT // 2:  # Valor no meio
+                label = font.render(f'{RECT_HEIGHT // 2}', True, BLACK)
+            else:  # Valor no topo
+                label = font.render(f'{RECT_HEIGHT}', True, BLACK)
+            
+            # Ajusta a posição dos rótulos para a lateral esquerda
+            screen.blit(label, (rect_x - 40, i - 10))
+
+        # Desenha as escalas de X (horizontal) na linha inferior
+        for i in [rect_x, rect_x + RECT_WIDTH // 2, rect_x + RECT_WIDTH]:
+            pygame.draw.line(screen, BLACK, (i, rect_y + RECT_HEIGHT), (i, rect_y + RECT_HEIGHT + 10), 2)  # Linha horizontal na parte inferior
+            
+            if i == rect_x:  # Valor na esquerda
+                label = font.render(f'0', True, BLACK)
+            elif i == rect_x + RECT_WIDTH:  # Valor na direita
+                label = font.render(f'{RECT_WIDTH}', True, BLACK)
+            else:  # Valor no meio
+                label = font.render(f'{RECT_WIDTH // 2}', True, BLACK)
+            
+            # Ajusta a posição dos rótulos para a linha inferior
+            screen.blit(label, (i - 10, rect_y + RECT_HEIGHT + 15))
+
+        
+
 
         for point in left_points:
             pygame.draw.circle(screen, RED, point['position'], 5)
