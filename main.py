@@ -29,7 +29,7 @@ left_points = []
 right_points = []
 alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
-num_points = 2
+num_points = 5
 
 def generate_random_points(num_points, x_start, x_end, y_start, y_end):
     points = []
@@ -340,6 +340,18 @@ def main():
                 else:
                     active_left = False
                     active_right = False
+
+                # Detect mouse clicks on the "atacar" button
+                if button_box_left.collidepoint(event.pos) and turn == 'left':
+                    update_message()
+                    text_left = ''
+                    active_left = False
+                    active_right = True
+                elif button_box_right.collidepoint(event.pos) and turn == 'right':
+                    update_message()
+                    text_right = ''
+                    active_right = False
+                    active_left = True
 
                 input_color_left = input_color_active if active_left else input_color_inactive
                 input_color_right = input_color_right_active if active_right else input_color_right_inactive
