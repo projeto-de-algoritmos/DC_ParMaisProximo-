@@ -208,7 +208,7 @@ def draw_start_screen():
 def draw_end_screen():
     screen.fill(WHITE)
     
-    end_message = "Parabéns, você ganhou!"
+    end_message = "Parabéns, você ganhou, dá um SS aí!!!!!"
     end_text = font.render(end_message, True, BLACK)
     screen.blit(end_text, (SCREEN_WIDTH // 2 - end_text.get_width() // 2, SCREEN_HEIGHT // 2 - end_text.get_height() // 2))
     
