@@ -58,5 +58,5 @@ Certifique-se de ter o Python 3.x instalado em sua máquina.
 1. Clone o repositório do projeto:
 
 ```bash
-git clone https://github.com/seu-usuario/seu-repositorio.git
-cd seu-repositorio
+git clone https://github.com/projeto-de-algoritmos/DC_ParMaisProximo-.git
+cd DC_ParMaisProximo-
