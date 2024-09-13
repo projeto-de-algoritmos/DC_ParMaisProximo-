@@ -60,3 +60,7 @@ Certifique-se de ter o Python 3.x instalado em sua máquina.
 ```bash
 git clone https://github.com/projeto-de-algoritmos/DC_ParMaisProximo-.git
 cd DC_ParMaisProximo-
+```
+
+## Vídeo da apresentação
+[![DC](https://img.youtube.com/vi/NAbeAKNbcOc/0.jpg)](https://www.youtube.com/watch?v=NAbeAKNbcOc)
